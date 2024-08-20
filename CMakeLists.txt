@@ -22,11 +22,12 @@ find_package(GLM REQUIRED)
 # Find OpenGL
 find_package(OpenGL REQUIRED)
 
-# Include directories
-include_directories(${GLEW_INCLUDE_DIRS} ${GLFW_INCLUDE_DIR} ${GLM_INCLUDE_DIRS})
+# Include directories (add the include directory)
+include_directories(${GLEW_INCLUDE_DIRS} ${GLFW_INCLUDE_DIR} ${GLM_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/include)
 
 # Add the executable
-add_executable(OpenGLTutorial main.cpp)
+file(GLOB_RECURSE SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp")
+add_executable(OpenGLTutorial ${SOURCES})
 
 # Link the GLEW, GLFW3, and OpenGL libraries
 target_link_libraries(OpenGLTutorial ${GLEW_LIBRARIES} ${GLFW_LIBRARIES} ${OPENGL_gl_LIBRARY})

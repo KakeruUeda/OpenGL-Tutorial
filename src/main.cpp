@@ -173,7 +173,7 @@ int main()
 
   glViewport(100, 50, 300, 300);
   
-  const GLuint program(loadProgram("../point.vert", "../point.frag"));
+  const GLuint program(loadProgram("../shaders/point.vert", "../shaders/point.frag"));
 
   std::unique_ptr<const Shape> shape(new Shape(2, 4, rectangleVertex));
   
