@@ -5,6 +5,7 @@
 #include <memory>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include "Window.h"
 #include "Shape.h"
 
 GLboolean printShaderInfoLog(GLuint shader, const char *str)
@@ -131,9 +132,9 @@ GLuint loadProgram(const char *vert, const char *frag)
 constexpr Object::Vertex rectangleVertex[] =
 {
   { -0.5f, -0.5f }, 
-  { 1.5f, -0.5f },
-  {1.5f, 1.5f },
-  { -0.5f, 1.5f }
+  { 0.5f, -0.5f },
+  { 0.5f, 0.5f },
+  { -0.5f, 0.5f }
 };
 
 int main()
@@ -144,48 +145,35 @@ int main()
     return 1;
   }
 
+  atexit(glfwTerminate);
+  
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-  GLFWwindow *const window(glfwCreateWindow(640, 480, "Hello!", nullptr, nullptr));
-  if (window == nullptr)
-  {
-    std::cerr << "Can't create GLFW window." << std::endl;
-    return 1;
-  }
-
-  atexit(glfwTerminate);
-
-  glfwMakeContextCurrent(window);
-
-  glewExperimental = GL_TRUE;
-  if (glewInit() != GLEW_OK)
-  {
-    std::cerr << "Can't initialize GLEW" << std::endl;
-    return 1;
-  }
-
-  glfwSwapInterval(1);
+  Window window;
 
   glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
 
-  glViewport(100, 50, 300, 300);
-  
   const GLuint program(loadProgram("../shaders/point.vert", "../shaders/point.frag"));
+
+  const GLint sizeLoc(glGetUniformLocation(program, "size"));
+  const GLint scaleLoc(glGetUniformLocation(program, "scale"));
 
   std::unique_ptr<const Shape> shape(new Shape(2, 4, rectangleVertex));
   
-  while (glfwWindowShouldClose(window) == GL_FALSE)
+  while (window)
   {
     glClear(GL_COLOR_BUFFER_BIT);
 
     glUseProgram(program);
 
+    glUniform2fv(sizeLoc, 1, window.getSize());
+    glUniform1f(scaleLoc, window.getScale());
+
     shape->draw();
 
-    glfwSwapBuffers(window);
-    glfwWaitEvents();
+    window.swapBuffers();
   }
 }
