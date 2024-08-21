@@ -6,6 +6,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include "Window.h"
+#include "Matrix.h"
 #include "Shape.h"
 
 GLboolean printShaderInfoLog(GLuint shader, const char *str)
@@ -158,8 +159,8 @@ int main()
 
   const GLuint program(loadProgram("../shaders/point.vert", "../shaders/point.frag"));
 
-  const GLint sizeLoc(glGetUniformLocation(program, "size"));
-  const GLint scaleLoc(glGetUniformLocation(program, "scale"));
+  const GLint modelviewLoc(glGetUniformLocation(program, "modelview"));
+  const GLint projectionLoc(glGetUniformLocation(program, "projection"));
 
   std::unique_ptr<const Shape> shape(new Shape(2, 4, rectangleVertex));
   
@@ -169,8 +170,20 @@ int main()
 
     glUseProgram(program);
 
-    glUniform2fv(sizeLoc, 1, window.getSize());
-    glUniform1f(scaleLoc, window.getScale());
+    const GLfloat *const size(window.getSize());
+    const GLfloat scale(window.getScale() * 2.0f);
+    const GLfloat w(size[0] / scale), h(size[1] / scale);
+    const Matrix projection(Matrix::frustum(-w, w, -h, h, 1.0f, 10.0f));
+    
+    const GLfloat *const location(window.getLocation());
+    const Matrix model(Matrix::translate(location[0], location[1], 0.0f));
+
+    const Matrix view(Matrix::lookat(3.0f, 4.0f, 5.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f));
+
+    const Matrix modelview(view * model);
+
+    glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, projection.data());
+    glUniformMatrix4fv(modelviewLoc, 1, GL_FALSE, modelview.data());
 
     shape->draw();
 
