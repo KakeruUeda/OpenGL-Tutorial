@@ -8,6 +8,7 @@
 #include "Window.h"
 #include "Matrix.h"
 #include "Shape.h"
+#include "ShapeIndex.h"
 
 GLboolean printShaderInfoLog(GLuint shader, const char *str)
 {
@@ -78,6 +79,7 @@ GLuint createProgram(const char *vsrc, const char *fsrc)
   }
   
   glBindAttribLocation(program, 0, "position"); 
+  glBindAttribLocation(program, 1, "color");
   glBindFragDataLocation(program, 0, "fragment"); 
   glLinkProgram(program);
   
@@ -138,6 +140,44 @@ constexpr Object::Vertex rectangleVertex[] =
   { -0.5f, 0.5f }
 };
 
+constexpr Object::Vertex octahedronVertex[] =
+{
+  { 0.0f, 1.0f, 0.0f }, { -1.0f, 0.0f, 0.0f },
+  { 0.0f, -1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f }, 
+  { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, 
+  { 0.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, -1.0f },
+  { -1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, 
+  { 1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, -1.0f }
+};
+
+constexpr Object::Vertex cubeVertex[] =
+{
+  { -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f }, // (0)
+  { -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.8f },  // (1) 
+  { -1.0f, 1.0f, 1.0f, 0.0f, 0.8f, 0.0f },   // (2)
+  { -1.0f, 1.0f, -1.0f, 0.0f, 0.8f, 0.8f },  // (3) 
+  { 1.0f, 1.0f, -1.0f, 0.8f, 0.0f, 0.0f },   // (4) 
+  { 1.0f, -1.0f, -1.0f, 0.8f, 0.0f, 0.8f },  // (5)
+  { 1.0f, -1.0f, 1.0f, 0.8f, 0.8f, 0.0f },   // (6)
+  { 1.0f, 1.0f, 1.0f, 0.8f, 0.8f, 0.8f }     // (7)
+};
+
+constexpr GLuint wireCubeIndex[] =
+{
+  1, 0, // (a)
+  2, 7, // (b)
+  3, 0, // (c)
+  4, 7, // (d)
+  5, 0, // (e)
+  6, 7, // (f)
+  1, 2, // (g)
+  2, 3, // (h)
+  3, 4, // (i)
+  4, 5, // (j)
+  5, 6, // (k)
+  6, 1  // (l)
+};
+
 int main()
 {
   if (glfwInit() == GL_FALSE)
@@ -162,7 +202,9 @@ int main()
   const GLint modelviewLoc(glGetUniformLocation(program, "modelview"));
   const GLint projectionLoc(glGetUniformLocation(program, "projection"));
 
-  std::unique_ptr<const Shape> shape(new Shape(2, 4, rectangleVertex));
+  //std::unique_ptr<const Shape> shape(new Shape(2, 4, rectangleVertex));
+  //std::unique_ptr<const Shape> shape(new Shape(3, 12, octahedronVertex));
+  std::unique_ptr<const Shape> shape(new ShapeIndex(3, 8, cubeVertex, 24, wireCubeIndex));
   
   while (window)
   {
@@ -171,9 +213,9 @@ int main()
     glUseProgram(program);
 
     const GLfloat *const size(window.getSize());
-    const GLfloat scale(window.getScale() * 2.0f);
-    const GLfloat w(size[0] / scale), h(size[1] / scale);
-    const Matrix projection(Matrix::frustum(-w, w, -h, h, 1.0f, 10.0f));
+    const GLfloat fovy(window.getScale() * 0.01f);
+    const GLfloat aspect(size[0] / size[1]);
+    const Matrix projection(Matrix::perspective(fovy, aspect, 1.0f, 10.0f));
     
     const GLfloat *const location(window.getLocation());
     const Matrix model(Matrix::translate(location[0], location[1], 0.0f));
